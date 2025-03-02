@@ -33,6 +33,15 @@ local function match(dir, pattern)
   end
 end
 
+local function matches(dir, patterns)
+  for _, pattern in ipairs(patterns) do
+    if match(dir, pattern) then
+      return true
+    end
+  end
+  return false
+end
+
 local function activate()
   if vim.g.SessionLoad == 1 then
     return false
@@ -62,13 +71,17 @@ local function get_root(patterns)
   current = current == "" and vim.fn.getcwd() or current
   local parent = parent_dir(current)
 
+  -- start by checking the current directory, if it matches we finish early.
+  if matches(current, patterns) then
+    return current
+  end
+
   while 1 do
-    for _, pattern in ipairs(patterns) do
-      if match(parent, pattern) then
-        return parent
-      end
+    if matches(parent, patterns) then
+      return parent
     end
 
+    -- go up a level
     current, parent = parent, parent_dir(parent)
     if parent == current then
       break
